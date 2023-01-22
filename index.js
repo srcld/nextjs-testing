@@ -1,5 +1,6 @@
 const puppeteer = require('puppeteer');
 const utils = require('./src/utils');
+const {getTest} = require("./src/tests/inventory");
 const log = require('./src/log').log;
 const table = require('./src/log').table;
 require('dotenv').config();
@@ -23,32 +24,13 @@ const wait = utils.wait;
     await page.goto(TARGET);
     await wait(2500)
 
-    // TODO this function should take USERNAME PASSWORD as parameters
-    // ADD USERNAME,PASSWORD manually for now
-    const loginTest = function () {
-        const results = [];
-        results.push('EXT found')
-        const components = window.Ext.ComponentQuery.query('bpcLogin')
-        if (components.length) {
-
-            results.push('LOGIN cmp found')
-            const usernameField = components[0].down('field[name=username]')
-            const passwordField = components[0].down('field[name=password]')
-            if (usernameField && passwordField) {
-                results.push('Fields found');
-                usernameField.setValue('FILLME-USERNAME');
-                passwordField.setValue('FILLME-USERNAME');
-
-                window.Ext.ComponentQuery.query('authdialog')[0].down('button[hidden=false]').click()
-            } else {
-                results.push('Fields not found');
-            }
-        }
-        return results;
-    }
+    log('FETCHING TEST SPECS');
+    let {test, params} = getTest();
+    params.user = USERNAME;
+    params.pass = PASSWORD;
 
     log('RUNNING tests');
-    const results = await page.evaluate(loginTest);
+    const results = await page.evaluate(test, params);
     await wait(1500);
 
     log('TAKING screenshot');
